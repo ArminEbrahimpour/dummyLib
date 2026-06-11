@@ -2,49 +2,979 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PDF Bookmark Library</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rmin Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-    .book { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #eee; }
-    .book-info { flex: 1; }
-    .book-title { font-weight: bold; font-size: 1.1rem; }
-    .book-meta { color: #666; font-size: 0.9rem; margin-top: 0.25rem; }
-    button, a.button { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; cursor: pointer; }
-    button:hover, a.button:hover { background: #1d4ed8; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0608;
+      --surface:   rgba(20, 10, 15, 0.75);
+      --surface-h: rgba(30, 12, 22, 0.9);
+      --border:    #2e1a26;
+      --border-h:  #5c2d4a;
+      --accent1:   #7c3a5e;
+      --accent2:   #8b4a6b;
+      --accent3:   #c06090;
+      --gold:      #e0cab0;
+      --gold-dim:  #c09878;
+      --text:      #c9b8a8;
+      --text-dim:  #6a5a4e;
+      --text-faint:#3e2a32;
+      --green-ok:  #6ec899;
+      --green-bg:  rgba(15,30,20,0.6);
+      --green-br:  #1a4a2e;
+      --red-ok:    #e08080;
+      --red-bg:    rgba(30,10,10,0.6);
+      --red-br:    #4a1a1a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Crimson Text', Georgia, serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── atmospheric bg ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 45% at 50% -5%, #2e0c1e 0%, transparent 65%),
+        radial-gradient(ellipse 45% 35% at 85% 100%, #0e0b2e 0%, transparent 60%),
+        radial-gradient(ellipse 30% 25% at 15% 80%,  #1c0a0a 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 3rem 2rem 5rem;
+    }
+
+    /* ── header ── */
+    .sigil {
+      text-align: center;
+      font-size: 1.8rem;
+      color: var(--accent1);
+      letter-spacing: 0.4em;
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.9rem, 5vw, 2.8rem);
+      font-weight: 700;
+      text-align: center;
+      color: #eedfc0;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-style: italic;
+      color: var(--text-dim);
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      margin-top: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin: 1.1rem 0 2.6rem;
+    }
+    .rule::before, .rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #5c2d4a, #9b5a7e, #5c2d4a, transparent);
+    }
+    .rule-gem {
+      width: 7px; height: 7px;
+      background: var(--accent2);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    /* ── toolbar row ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+      flex-wrap: wrap;
+    }
+
+    .book-count {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .btn-open {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      background: transparent;
+      border: 1px solid #4a2535;
+      padding: 0.55rem 1.3rem;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.25s, border-color 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-open::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .btn-open:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .btn-open:hover::before { opacity: 1; }
+    .btn-open svg, .btn-open span { position: relative; z-index: 1; }
+
+    /* ── book list ── */
+    #bookList {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .book {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      position: relative;
+      transition: border-color 0.25s, background 0.25s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .book::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent1), #3a1228, var(--accent1));
+      border-radius: 5px 0 0 5px;
+      opacity: 0.55;
+      transition: opacity 0.25s;
+    }
+    .book:hover { border-color: var(--border-h); background: var(--surface-h); }
+    .book:hover::before { opacity: 1; }
+
+    .book-num {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      letter-spacing: 0.05em;
+      width: 1.5rem;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .book-cover-icon {
+      width: 36px;
+      height: 48px;
+      background: rgba(92, 45, 74, 0.18);
+      border: 1px solid #3a1a2e;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .book:hover .book-cover-icon {
+      background: rgba(139, 74, 107, 0.22);
+      border-color: var(--accent1);
+    }
+    .book-cover-icon svg {
+      width: 18px; height: 18px;
+      stroke: var(--accent1);
+      fill: none;
+      stroke-width: 1.5;
+      transition: stroke 0.25s;
+    }
+    .book:hover .book-cover-icon svg { stroke: var(--accent2); }
+
+    .book-info { flex: 1; min-width: 0; }
+
+    .book-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.03em;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.25rem;
+    }
+
+    .book-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      font-style: italic;
+      font-size: 0.86rem;
+      color: var(--text-dim);
+    }
+    .sep { color: var(--text-faint); }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-top: 0.45rem;
+    }
+    .progress-bar {
+      height: 2px;
+      width: 130px;
+      background: #1e1018;
+      border-radius: 2px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent1), var(--accent3));
+    }
+    .progress-label {
+      font-size: 0.76rem;
+      color: var(--text-faint);
+      font-style: normal;
+    }
+
+    .book-action {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .btn-resume {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      background: transparent;
+      border: 1px solid #4a2535;
+      padding: 0.45rem 1rem;
+      border-radius: 3px;
+      text-decoration: none;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.25s, border-color 0.25s;
+    }
+    .btn-resume::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .btn-resume:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .btn-resume:hover::before { opacity: 1; }
+    .btn-resume span { position: relative; z-index: 1; }
+
+    /* ── empty state ── */
+    .empty {
+      text-align: center;
+      padding: 4.5rem 2rem;
+      color: var(--text-faint);
+    }
+    .empty-glyph {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.25;
+      display: block;
+    }
+    .empty p {
+      font-style: italic;
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+    .empty-cta {
+      margin-top: 1.4rem;
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      background: transparent;
+      border: 1px solid #4a2535;
+      padding: 0.6rem 1.4rem;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.25s, border-color 0.25s;
+    }
+    .empty-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .empty-cta:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .empty-cta:hover::before { opacity: 1; }
+    .empty-cta span { position: relative; z-index: 1; }
+
+    /* ── footer ── */
+    .footer {
+      text-align: center;
+      margin-top: 3.5rem;
+      color: var(--text-faint);
+      font-size: 1rem;
+      letter-spacing: 0.5em;
+    }
+
+    /* ══════════════════════════════════════════
+       MODAL OVERLAY
+    ══════════════════════════════════════════ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 2, 5, 0.82);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #110810;
+      border: 1px solid #3e1e30;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 520px;
+      padding: 2rem 2rem 1.8rem;
+      position: relative;
+    }
+
+    .modal::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent1), var(--accent2), var(--accent1), transparent);
+      border-radius: 6px 6px 0 0;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.6rem;
+    }
+
+    .modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #eedfc0;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .modal-sub {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-faint);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 0 0.2rem;
+      line-height: 1;
+      transition: color 0.2s;
+      font-family: inherit;
+    }
+    .modal-close:hover { color: var(--accent2); }
+
+    /* path input */
+    .input-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 0.45rem;
+    }
+
+    .path-row {
+      display: flex;
+      gap: 0;
+      border: 1px solid #3e1e30;
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+    .path-row:focus-within { border-color: var(--accent1); }
+
+    .path-input {
+      flex: 1;
+      background: rgba(10, 5, 8, 0.8);
+      border: none;
+      outline: none;
+      color: var(--gold);
+      font-family: 'Crimson Text', serif;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.85rem;
+      min-width: 0;
+    }
+    .path-input::placeholder { color: var(--text-faint); font-style: italic; }
+
+    .path-browse {
+      background: rgba(92, 45, 74, 0.2);
+      border: none;
+      border-left: 1px solid #3e1e30;
+      color: var(--gold-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0 1rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .path-browse:hover { background: rgba(139, 74, 107, 0.3); color: #f0d8b8; }
+
+    /* hidden real file input */
+    #realFileInput { display: none; }
+
+    /* drop zone */
+    .drop-zone {
+      border: 1px dashed #3e1e30;
+      border-radius: 4px;
+      background: rgba(10, 4, 8, 0.5);
+      padding: 1.8rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: border-color 0.25s, background 0.25s;
+      position: relative;
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent2);
+      background: rgba(20, 8, 16, 0.7);
+    }
+    .drop-icon {
+      display: block;
+      margin: 0 auto 0.5rem;
+    }
+    .drop-text {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .drop-hint {
+      font-size: 0.82rem;
+      font-style: italic;
+      color: var(--text-faint);
+      margin-top: 0.2rem;
+    }
+
+    .divider-or {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin: 1.1rem 0;
+      color: var(--text-faint);
+      font-style: italic;
+      font-size: 0.85rem;
+    }
+    .divider-or::before, .divider-or::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #2e1a26;
+    }
+
+    /* selected file pill */
+    .sel-pill {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 1rem;
+      background: rgba(20, 8, 15, 0.8);
+      border: 1px solid #2e1a26;
+      border-left: 3px solid var(--accent1);
+      border-radius: 4px;
+      padding: 0.7rem 0.9rem;
+    }
+    .sel-pill.visible { display: flex; }
+    .sel-pill-icon { color: var(--accent1); flex-shrink: 0; }
+    .sel-pill-name {
+      flex: 1;
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      color: var(--gold);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sel-pill-clear {
+      background: none;
+      border: none;
+      color: var(--text-faint);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0 2px;
+      transition: color 0.2s;
+    }
+    .sel-pill-clear:hover { color: var(--accent2); }
+
+    /* action bar */
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.4rem;
+    }
+
+    .btn-cancel {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid var(--text-faint);
+      padding: 0.55rem 1.1rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-cancel:hover { color: var(--text); border-color: var(--text-dim); }
+
+    .btn-summon {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      background: transparent;
+      border: 1px solid #4a2535;
+      padding: 0.55rem 1.3rem;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.25s, border-color 0.25s;
+    }
+    .btn-summon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .btn-summon:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .btn-summon:hover::before { opacity: 1; }
+    .btn-summon:disabled { opacity: 0.38; cursor: not-allowed; }
+    .btn-summon:disabled::before { opacity: 0; }
+    .btn-summon span { position: relative; z-index: 1; }
+
+    /* status */
+    .modal-status {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.9rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-style: italic;
+    }
+    .modal-status.visible { display: flex; }
+    .modal-status.success {
+      background: var(--green-bg);
+      border: 1px solid var(--green-br);
+      color: var(--green-ok);
+    }
+    .modal-status.error {
+      background: var(--red-bg);
+      border: 1px solid var(--red-br);
+      color: var(--red-ok);
+    }
+    .modal-status.loading {
+      background: rgba(20, 8, 15, 0.6);
+      border: 1px solid #3e1e30;
+      color: var(--text-dim);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
   </style>
 </head>
 <body>
-  <h1>📚 Your Books</h1>
+
+<!-- ════════════════════════ PAGE ════════════════════════ -->
+<div class="page">
+
+  <div class="sigil">⸸ &nbsp;☽&nbsp; ⸸</div>
+  <h1>Rmin Library</h1>
+  <p class="subtitle">— Codex of the Forgotten Volumes —</p>
+  <div class="rule"><div class="rule-gem"></div></div>
+
+  <div class="toolbar">
+    <div class="book-count" id="bookCount">Loading tomes…</div>
+    <button class="btn-open" id="openModalBtn" onclick="openModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:relative;z-index:1">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      <span>Open a Tome</span>
+    </button>
+  </div>
+
   <div id="bookList"></div>
 
-  <script>
-    async function loadBooks() {
-      const res = await fetch("/api/books");
-      const books = await res.json();
-      const listEl = document.getElementById("bookList");
-      if (!books || books.length === 0) {
-        listEl.innerHTML = "<p>No books yet. Open a PDF to add it here.</p>";
-        return;
+  <div class="footer">✦ &nbsp; ✦ &nbsp; ✦</div>
+</div>
+
+
+<!-- ════════════════════════ MODAL ════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Open a tome">
+
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">⸸ &nbsp;Summon a Tome</div>
+        <div class="modal-sub">Bind a PDF to the library</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Path input -->
+    <label class="input-label" for="pathInput">Full file path</label>
+    <div class="path-row">
+      <input
+        class="path-input"
+        id="pathInput"
+        type="text"
+        placeholder="/home/rmin/books/tome.pdf"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="path-browse" onclick="triggerFilePick()">Browse</button>
+    </div>
+
+    <input type="file" id="realFileInput" accept=".pdf">
+
+    <!-- OR divider -->
+    <div class="divider-or">or drop a file</div>
+
+    <!-- Drop zone -->
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="dropInput" accept=".pdf">
+      <svg class="drop-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5c2d4a" stroke-width="1.5">
+        <path d="M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4M12 3v11M8 10l4 4 4-4"/>
+      </svg>
+      <div class="drop-text">Click or drag a PDF here</div>
+      <div class="drop-hint">PDF files only</div>
+    </div>
+
+    <!-- Selected file pill -->
+    <div class="sel-pill" id="selPill">
+      <svg class="sel-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span class="sel-pill-name" id="selPillName"></span>
+      <button class="sel-pill-clear" onclick="clearFile()" aria-label="Clear">✕</button>
+    </div>
+
+    <!-- Status -->
+    <div class="modal-status" id="modalStatus">
+      <span id="statusIcon"></span>
+      <span id="statusText"></span>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-summon" id="summonBtn" disabled onclick="summon()">
+        <span>⸸ &nbsp;Open in Library</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════ SCRIPT ════════════════════════ -->
+<script>
+  /* ── state ── */
+  let pickedFile   = null; // File object from picker (gives name only in browser)
+  let manualPath   = '';   // typed path from input
+  let activePath   = '';   // what we'll actually send
+
+  /* ── utils ── */
+  function escHtml(t) {
+    return String(t).replace(/[&<>"']/g, m =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  }
+
+  /* ── MODAL ── */
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('pathInput').focus();
+  }
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    clearFile();
+    hideStatus();
+  }
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  /* ── file pick (browser) ── */
+  function triggerFilePick() {
+    document.getElementById('realFileInput').click();
+  }
+  document.getElementById('realFileInput').addEventListener('change', function() {
+    if (this.files[0]) applyFile(this.files[0]);
+  });
+  document.getElementById('dropInput').addEventListener('change', function() {
+    if (this.files[0]) applyFile(this.files[0]);
+  });
+
+  /* ── drag & drop ── */
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) applyFile(f);
+  });
+
+  /* ── path input ── */
+  document.getElementById('pathInput').addEventListener('input', function() {
+    manualPath = this.value.trim();
+    if (manualPath) {
+      activePath = manualPath;
+      // clear any file picker selection
+      pickedFile = null;
+      document.getElementById('selPill').classList.remove('visible');
+      document.getElementById('summonBtn').disabled = false;
+    } else {
+      activePath = pickedFile ? (pickedFile.webkitRelativePath || pickedFile.name) : '';
+      document.getElementById('summonBtn').disabled = !activePath;
+    }
+    hideStatus();
+  });
+
+  function applyFile(file) {
+    pickedFile = file;
+    // Use Electron-style path if available, else name only
+    const path = file.path || file.webkitRelativePath || file.name;
+    activePath = path;
+    // Mirror to input
+    document.getElementById('pathInput').value = path;
+    manualPath = path;
+    // Show pill
+    document.getElementById('selPillName').textContent = file.name;
+    document.getElementById('selPill').classList.add('visible');
+    document.getElementById('summonBtn').disabled = false;
+    hideStatus();
+  }
+
+  function clearFile() {
+    pickedFile = null;
+    manualPath = '';
+    activePath = '';
+    document.getElementById('pathInput').value = '';
+    document.getElementById('realFileInput').value = '';
+    document.getElementById('dropInput').value = '';
+    document.getElementById('selPill').classList.remove('visible');
+    document.getElementById('summonBtn').disabled = true;
+    hideStatus();
+  }
+
+  /* ── status helpers ── */
+  function showStatus(type, icon, msg) {
+    const box = document.getElementById('modalStatus');
+    box.className = 'modal-status visible ' + type;
+    document.getElementById('statusIcon').innerHTML = icon;
+    document.getElementById('statusText').textContent = msg;
+  }
+  function hideStatus() {
+    document.getElementById('modalStatus').className = 'modal-status';
+  }
+
+  /* ── SUMMON: call /api/open?path=... ── */
+  async function summon() {
+    const path = activePath || document.getElementById('pathInput').value.trim();
+    if (!path) return;
+
+    const btn = document.getElementById('summonBtn');
+    btn.disabled = true;
+    showStatus('loading', '<span class="spin">⟳</span>', 'Consulting the archive…');
+
+    try {
+      const res = await fetch('/api/open?path=' + encodeURIComponent(path));
+      if (res.redirected || res.ok) {
+        showStatus('success', '✦', 'The tome has been summoned. Redirecting…');
+        setTimeout(() => {
+          // follow the redirect the server sends (/view.html?book=...)
+          window.location.href = res.url || '/';
+        }, 800);
+      } else {
+        const msg = await res.text().catch(() => '');
+        showStatus('error', '✕', msg || 'The spirits refused — check the path.');
+        btn.disabled = false;
       }
-      listEl.innerHTML = books.map(book => `
+    } catch (err) {
+      showStatus('error', '✕', 'Cannot reach the server. Is it awake?');
+      btn.disabled = false;
+    }
+  }
+
+  /* ── allow Enter in path input ── */
+  document.getElementById('pathInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !document.getElementById('summonBtn').disabled) summon();
+  });
+
+  /* ════════════════════ LIBRARY LOAD ════════════════════ */
+  function renderBooks(books) {
+    const listEl = document.getElementById('bookList');
+    const countEl = document.getElementById('bookCount');
+
+    if (!books || books.length === 0) {
+      countEl.textContent = '0 Tomes';
+      listEl.innerHTML = `
+        <div class="empty">
+          <span class="empty-glyph">📜</span>
+          <p>No tomes yet reside within these halls.<br>Summon a PDF to begin your collection.</p>
+          <button class="empty-cta" onclick="openModal()"><span>⸸ &nbsp;Open a Tome</span></button>
+        </div>`;
+      return;
+    }
+
+    countEl.textContent = books.length === 1 ? '1 Tome' : `${books.length} Tomes`;
+
+    listEl.innerHTML = books.map((book, i) => {
+      const pct      = book.page_count ? Math.round((book.last_page / book.page_count) * 100) : 0;
+      const dateStr  = new Date(book.last_opened).toLocaleString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      const num = String(i + 1).padStart(2, '0');
+      return `
         <div class="book">
-          <div class="book-info">
-            <div class="book-title">${escapeHtml(book.title)}</div>
-            <div class="book-meta">
-              Page ${book.last_page} of ${book.page_count || "?"} 
-              – Last opened ${new Date(book.last_opened).toLocaleString()}
-            </div>
+          <div class="book-num">${num}</div>
+          <div class="book-cover-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 19V6a2 2 0 012-2h13v13"/>
+              <path d="M4 19a2 2 0 002 2h13a2 2 0 000-4H6a2 2 0 01-2-2z"/>
+              <line x1="9" y1="7" x2="15" y2="7"/>
+              <line x1="9" y1="10" x2="13" y2="10"/>
+            </svg>
           </div>
-          <a class="button" href="/view.html?book=${book.id}">Resume</a>
-        </div>
-      `).join("");
+          <div class="book-info">
+            <div class="book-title">${escHtml(book.title)}</div>
+            <div class="book-meta">
+              <span>Page ${book.last_page} of ${book.page_count || '?'}</span>
+              <span class="sep">◆</span>
+              <span>${dateStr}</span>
+            </div>
+            ${book.page_count ? `
+            <div class="progress-row">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:${pct}%"></div>
+              </div>
+              <span class="progress-label">${pct}%</span>
+            </div>` : ''}
+          </div>
+          <div class="book-action">
+            <a class="btn-resume" href="/view.html?book=${escHtml(book.id)}">
+              <span>Resume</span>
+            </a>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function loadBooks() {
+    try {
+      const res = await fetch('/api/books');
+      if (!res.ok) throw new Error('non-ok');
+      const books = await res.json();
+      renderBooks(Array.isArray(books) ? books : []);
+    } catch {
+      renderBooks([]);
     }
-    function escapeHtml(text) {
-      return String(text).replace(/[&<>"']/g, m => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
-      }[m]));
-    }
-    loadBooks();
-  </script>
+  }
+
+  loadBooks();
+</script>
 </body>
 </html>

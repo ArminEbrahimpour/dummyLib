@@ -22,20 +22,22 @@ func NewStore(db *sql.DB) *Store {
 // UpSertBook update or insert the book if it doesn't exists
 func (s *Store) UpSertBook(book *model.Book) error {
 	book.LastOpened = time.Now().UTC().Round(time.Second)
+
 	_, err := s.db.Exec(`
-	INSERT INTO books (id, path, title, page_count, last_page, last_opened)
-		VALUES(?, ?, ?, ?, ?, ?)
+		INSERT INTO books (id, path, title, page_count, last_page, last_opened)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT(path) DO UPDATE SET
+			id = excluded.id,
 			title = excluded.title,
 			page_count = excluded.page_count,
-			last_page = excluded.last_page,
-			last_opened = excluded.last_opened`, book.ID.String(), book.Path, book.Title, book.PageCount, book.LastPage, book.LastOpened)
-
+			last_opened = excluded.last_opened
+	`, book.ID.String(), book.Path, book.Title, book.PageCount, book.LastPage, book.LastOpened)
 	if err != nil {
 		return err
 	}
 	var idStr string
 	err = s.db.QueryRow(`SELECT id FROM books WHERE path = ?`, book.Path).Scan(&idStr)
+	//log.Printf("DEBUG UpSertBook: read-back id = %s", idStr)
 	if err != nil {
 		return err
 	}
@@ -90,6 +92,11 @@ func (s *Store) AllBooks() ([]model.Book, error) {
 		}
 		b.CoverPath = coverPath.String
 		b.LastOpened, err = parseTime(lastOpenedStr)
+
+		if err != nil {
+			return nil, err
+		}
+		b.ID, err = uuid.Parse(idStr)
 		if err != nil {
 			return nil, err
 		}

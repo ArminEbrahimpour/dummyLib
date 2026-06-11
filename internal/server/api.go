@@ -4,10 +4,13 @@ import (
 	"Library/internal/model"
 	"Library/pkg/db"
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	pdfcpuApi "github.com/pdfcpu/pdfcpu/pkg/api"
 
 	"github.com/google/uuid"
 )
@@ -115,18 +118,26 @@ func (a *API) handleOpen(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create book id
-	id := uuid.New()
+	id := uuid.NewSHA1(uuid.NameSpaceOID, []byte(path))
+	//log.Printf("DEBUG: handleOpen: generated id = %s", id.String())
 	title := filepath.Base(path)
-
+	pageCount, err := pdfcpuApi.PageCountFile(path)
+	if err != nil {
+		log.Printf("page count failed: %w", err)
+		return
+	}
 	book := &model.Book{
-		ID:    id,
-		Path:  path,
-		Title: title,
+		ID:        id,
+		Path:      path,
+		Title:     title,
+		LastPage:  1,
+		PageCount: pageCount,
 	}
 	if err := a.Store.UpSertBook(book); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	//log.Printf("DEBUG handleOpen: book.ID after upsert = %s", book.ID.String())
 	http.Redirect(w, r, "/view.html?book="+book.ID.String(), http.StatusFound)
 }
 func (a *API) handleServePDF(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
@@ -143,3 +154,7 @@ func (a *API) handleServePDF(w http.ResponseWriter, r *http.Request, id uuid.UUI
 	w.Header().Set("Content-Type", "application/pdf")
 	http.ServeFile(w, r, book.Path)
 }
+
+// func(a *API)handleLast(w http.ResponseWriter, r *http.Request){
+// 	book , err := a.Store.GetBookBy
+// }

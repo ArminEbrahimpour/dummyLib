@@ -1,38 +1,180 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Opening PDF…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opening tome…</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Crimson Text', Georgia, serif;
+      background: #0a0608;
+      color: #c9b8a8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 10%, #2a0a1a 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 80% 90%, #0d0a2a 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .center {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .sigil {
+      font-size: 2rem;
+      color: #7c3a5e;
+      letter-spacing: 0.4em;
+      margin-bottom: 1.2rem;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 1; }
+    }
+
+    .title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #e8d5b0;
+      margin-bottom: 0.4rem;
+    }
+
+    .sub {
+      font-style: italic;
+      color: #6a5a4e;
+      font-size: 0.95rem;
+    }
+
+    .dots {
+      margin-top: 1.8rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      background: #7c3a5e;
+      border-radius: 50%;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%            { transform: scale(1);   opacity: 1; }
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 2.5rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #4a3a32;
+      text-decoration: none;
+      border-bottom: 1px solid #3a2030;
+      padding-bottom: 1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .back-link:hover { color: #c09878; border-color: #8b4a6b; }
+
+    .error-box {
+      display: none;
+      margin-top: 1.5rem;
+      background: rgba(30,10,10,0.6);
+      border: 1px solid #4a1a1a;
+      color: #e08080;
+      border-radius: 4px;
+      padding: 0.7rem 1.1rem;
+      font-size: 0.9rem;
+      font-style: italic;
+      max-width: 360px;
+    }
+    .error-box.visible { display: block; }
+  </style>
 </head>
 <body>
-<script>
-  async function init() {
-    const params = new URLSearchParams(window.location.search);
-    const bookId = params.get("book");
-    if (!bookId) {
-      document.body.textContent = "Missing book ID.";
-      return;
-    }
+  <div class="center">
+    <div class="sigil">⸸ ☽ ⸸</div>
+    <div class="title" id="titleEl">Opening Tome…</div>
+    <div class="sub" id="subEl">Consulting the archive</div>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+    <a class="back-link" href="/">← Return to the Library</a>
+  </div>
 
-    let lastPage = 1;
-    try {
-      const resp = await fetch("/api/books/" + bookId);
-      if (resp.ok) {
-        const book = await resp.json();
-        lastPage = book.last_page || 1;
+  <script>
+    async function init() {
+      const params  = new URLSearchParams(window.location.search);
+      const bookId  = params.get('book');
+      const titleEl = document.getElementById('titleEl');
+      const subEl   = document.getElementById('subEl');
+      const errBox  = document.getElementById('errorBox');
+
+      if (!bookId) {
+        titleEl.textContent = 'Missing Tome ID';
+        subEl.textContent   = 'No book was specified in the scroll.';
+        errBox.textContent  = 'No ?book= parameter found in the URL.';
+        errBox.classList.add('visible');
+        return;
       }
-    } catch (e) {
-      console.error("Could not fetch last page", e);
+
+      let lastPage = 1;
+      try {
+        const resp = await fetch('/api/books/' + bookId);
+        if (resp.ok) {
+          const book = await resp.json();
+          lastPage = book.last_page || 1;
+          if (book.title) {
+            titleEl.textContent = book.title;
+            subEl.textContent   = 'Resuming at page ' + lastPage;
+          }
+        }
+      } catch (e) {
+        console.error('Could not fetch book metadata', e);
+      }
+
+      const viewerURL =
+        '/viewer/web/viewer.html'
+        + '?file=' + encodeURIComponent('/api/books/' + bookId + '/pdf')
+        + '&bookId=' + bookId
+        + '#page=' + lastPage;
+
+      // Small delay so the animation is visible
+      setTimeout(() => {
+        window.location.replace(viewerURL);
+      }, 700);
     }
 
-    // Build the PDF.js viewer URL
-const viewerURL = "/viewer/web/viewer.html"
-                + "?file=" + encodeURIComponent("/api/books/" + bookId + "/pdf")
-                + "&bookId=" + bookId
-                + "#page=" + lastPage;
-    window.location.replace(viewerURL);
-  }
-  init();
-</script>
+    init();
+  </script>
 </body>
 </html>
