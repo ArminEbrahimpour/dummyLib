@@ -29,7 +29,14 @@ since the browser can't access your files path for security reasons you yourself
 
 ## 🚀 Getting Started (run it yourself)
 
+for using this on linux you need to install `libayatana-appindicator-glib`
+
+```bash
+sudo apt install libayatana-appindicator-glib-dev   # Ubuntu/Debian or any other package manager your distro uses
+```
+
 ### Option A: Download a pre-built binary (recommended)
+
 - Go to the [Releases page](https://github.com/ArminEbrahimpour/dummyLib/releases) (TODO: add link)
 - Grab the version for your OS (Linux, macOS, Windows)
 - Make it executable (Linux/macOS: `chmod +x dummylib`)
@@ -45,3 +52,5 @@ cd dummylib
 go mod download
 go build -o dummylib ./cmd
 ./dummylib
+```
+![Library screenshot](assets/dummyLib.png)
