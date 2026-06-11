@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Opening PDF…</title>
+</head>
+<body>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  let file = params.get("file") || "test.pdf";
+  // Ensure the file path is an absolute URL from the server root
+  if (!file.startsWith("/")) {
+    file = "/" + file;
+  }
+  // Redirect to the real viewer, passing the file as a query parameter
+  window.location.replace(
+    "/viewer/web/viewer.html?file=" + encodeURIComponent(file)
+  );
+</script>
+</body>
+</html>
