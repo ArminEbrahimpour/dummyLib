@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Bookmark Library</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    .book { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #eee; }
+    .book-info { flex: 1; }
+    .book-title { font-weight: bold; font-size: 1.1rem; }
+    .book-meta { color: #666; font-size: 0.9rem; margin-top: 0.25rem; }
+    button, a.button { background: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; cursor: pointer; }
+    button:hover, a.button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <h1>📚 Your Books</h1>
+  <div id="bookList"></div>
+
+  <script>
+    async function loadBooks() {
+      const res = await fetch("/api/books");
+      const books = await res.json();
+      const listEl = document.getElementById("bookList");
+      if (!books || books.length === 0) {
+        listEl.innerHTML = "<p>No books yet. Open a PDF to add it here.</p>";
+        return;
+      }
+      listEl.innerHTML = books.map(book => `
+        <div class="book">
+          <div class="book-info">
+            <div class="book-title">${escapeHtml(book.title)}</div>
+            <div class="book-meta">
+              Page ${book.last_page} of ${book.page_count || "?"} 
+              – Last opened ${new Date(book.last_opened).toLocaleString()}
+            </div>
+          </div>
+          <a class="button" href="/view.html?book=${book.id}">Resume</a>
+        </div>
+      `).join("");
+    }
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, m => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+      }[m]));
+    }
+    loadBooks();
+  </script>
+</body>
+</html>

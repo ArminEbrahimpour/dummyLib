@@ -482,5 +482,25 @@ See https://github.com/adobe-type-tools/cmap-resources
     <div id="printContainer"></div>
 
     <input type="file" id="fileInput" class="hidden">
+<script>
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const bookId = params.get("bookId");
+  if (!bookId) return;
+
+  // Save current page on tab close / refresh
+  window.addEventListener("beforeunload", function() {
+    const pageNumberInput = document.getElementById("pageNumber");
+    if (!pageNumberInput) return;
+    const page = parseInt(pageNumberInput.value, 10);
+    if (!isNaN(page)) {
+      // Use sendBeacon for reliability during page unload
+      navigator.sendBeacon("/api/books/" + bookId, JSON.stringify({page: page}));
+    }
+  });
+
+  // Also save periodically? (optional) – could save every 10 seconds as fallback.
+})();
+</script>
   </body>
 </html>

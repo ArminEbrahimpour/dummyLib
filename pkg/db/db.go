@@ -28,7 +28,7 @@ func InitDB(ctx context.Context, dbPath string) (*sql.DB, error) {
 func ensureSchema(ctx context.Context, db *sql.DB) error {
 
 	schema := `
-	CREATE	TABLE books (
+	CREATE	TABLE IF NOT EXISTS books (
 		id	TEXT PRIMARY KEY, 
 		path TEXT NOT NULL UNIQUE,
 		title TEXT,
