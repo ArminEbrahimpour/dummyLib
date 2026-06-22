@@ -487,18 +487,19 @@ See https://github.com/adobe-type-tools/cmap-resources
   const params = new URLSearchParams(window.location.search);
   const bookId = params.get("bookId");
   if (!bookId) return;
-
   // Save current page on tab close / refresh
   window.addEventListener("beforeunload", function() {
-    const pageNumberInput = document.getElementById("pageNumber");
-    if (!pageNumberInput) return;
-    const page = parseInt(pageNumberInput.value, 10);
+    const numPagesEl = document.getElementById("numPages");
+    if (!numPagesEl) return;
+    // Text looks like "(324 of 510)" - extract the first number
+    const match = numPagesEl.textContent.match(/\(?(\d+)\s+of\s+(\d+)\)?/);
+    if (!match) return;
+    const page = parseInt(match[1], 10);
     if (!isNaN(page)) {
       // Use sendBeacon for reliability during page unload
       navigator.sendBeacon("/api/books/" + bookId, JSON.stringify({page: page}));
     }
   });
-
   // Also save periodically? (optional) – could save every 10 seconds as fallback.
 })();
 </script>
