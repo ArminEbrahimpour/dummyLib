@@ -5,21 +5,35 @@ import (
 	database "Library/pkg/db"
 	"Library/pkg/systray"
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
+func getDbPath() string {
+
+	homePth, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	confDir := filepath.Join(homePth, ".config", "dummylib")
+	if err := os.MkdirAll(confDir, 0700); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("config directory created")
+	return confDir
+
+}
+
 func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	pathToDb := filepath.Join(dir, "bookmarks.db")
+	path := getDbPath()
+	pathToDb := fmt.Sprintf("%s/bookmarks.db", path)
 	db, err := database.InitDB(ctx, pathToDb)
 
 	if err != nil {
