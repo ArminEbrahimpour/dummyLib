@@ -7,13 +7,20 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	db, err := database.InitDB(ctx, "bookmarks.db")
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	pathToDb := filepath.Join(dir, "bookmarks.db")
+	db, err := database.InitDB(ctx, pathToDb)
 
 	if err != nil {
 		log.Fatal(err)
