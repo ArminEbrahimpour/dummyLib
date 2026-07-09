@@ -37,7 +37,7 @@ sudo apt install libayatana-appindicator-glib-dev   # Ubuntu/Debian or any other
 
 ### Option A: Download a pre-built binary (recommended)
 
-- Go to the [Releases page](https://github.com/ArminEbrahimpour/dummyLib/releases) (TODO: add link)
+- Go to the [Releases page](https://github.com/ArminEbrahimpour/dummyLib/releases) 
 - Grab the version for your OS (Linux, macOS, Windows)
 - Make it executable (Linux/macOS: `chmod +x dummylib`)
 - Run it: `./dummylib`
