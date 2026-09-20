@@ -4,54 +4,134 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dummy Library</title>
+
+  <!--
+    ══════════════════════════════════════════════════════════════
+    COZY LIBRARY REDESIGN — summary of changes (index.html)
+    ══════════════════════════════════════════════════════════════
+    1. Fonts swapped: Cinzel/Crimson Text (a gothic/occult pairing)
+       → Playfair Display (headings) + Lora (body/UI text), a warm
+       antiquarian-book pairing with proper italics for the many
+       italic labels already used throughout the app.
+    2. Full color re-theme: the near-black/burgundy-purple "gothic"
+       palette has been replaced with deep walnut wood, mahogany,
+       aged leather and brass/gold, plus muted forest-green and
+       burgundy used only for status accents. All the same CSS
+       custom properties are reused so nothing else had to change
+       structurally — only the :root values and a handful of
+       hard-coded hex colors.
+    3. Occult iconography (⸸ skull-cross, ☽ moon) replaced with a
+       bookish fleuron (❦), which now "flickers" gently like a
+       candle rather than pulsing like an occult sigil.
+    4. New atmosphere: layered wood-grain/candle-glow background,
+       a soft vignette, and drifting "dust mote" particles (pure
+       CSS, decorative, aria-hidden, and disabled entirely under
+       prefers-reduced-motion).
+    5. Book rows now read as book spines resting on a shelf: a
+       gilt-edge spine bar on the left, and a hover state that
+       lifts + glows the row like pulling a book toward candlelight
+       (the page's one "signature" interaction).
+    6. Copy pass: a few gothic/occult phrases ("Codex of the
+       Forgotten Volumes", "the spirits refused") were swapped for
+       warmer, cozier phrasing. No functional strings (paths, ids,
+       endpoints) were touched.
+    7. Accessibility additions: visible focus-visible rings,
+       role="list"/"listitem" + role="progressbar" on the book
+       list, aria-live on the status box, aria-hidden on purely
+       decorative glyphs, and a reduced-motion media query. All
+       IDs, classes used by JavaScript, function names and fetch
+       endpoints are unchanged — only presentation was touched.
+    ══════════════════════════════════════════════════════════════
+  -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ══════════════════════════════════════════
+       COLOR TOKENS — warm wood / leather / brass
+       (same variable NAMES as before so every rule
+       below still resolves; only the values moved
+       from a dark purple gothic palette to a cozy
+       library palette)
+    ══════════════════════════════════════════ */
     :root {
-      --bg:        #0a0608;
-      --surface:   rgba(20, 10, 15, 0.75);
-      --surface-h: rgba(30, 12, 22, 0.9);
-      --border:    #2e1a26;
-      --border-h:  #5c2d4a;
-      --accent1:   #7c3a5e;
-      --accent2:   #8b4a6b;
-      --accent3:   #c06090;
-      --gold:      #e0cab0;
-      --gold-dim:  #c09878;
-      --text:      #c9b8a8;
-      --text-dim:  #6a5a4e;
-      --text-faint:#3e2a32;
-      --green-ok:  #6ec899;
-      --green-bg:  rgba(15,30,20,0.6);
-      --green-br:  #1a4a2e;
-      --red-ok:    #e08080;
-      --red-bg:    rgba(30,10,10,0.6);
-      --red-br:    #4a1a1a;
+      --bg:        #150e08;                    /* deep walnut floor */
+      --surface:   rgba(58, 40, 22, 0.55);      /* mahogany panel */
+      --surface-h: rgba(84, 57, 30, 0.72);      /* panel on hover */
+      --border:    #4a3319;                     /* warm wood border */
+      --border-h:  #8a6a35;                     /* brass-brown hover border */
+      --accent1:   #a5763a;                     /* aged leather / dark brass */
+      --accent2:   #c9a24b;                     /* brass */
+      --accent3:   #e8c983;                     /* bright brass / gold leaf */
+      --gold:      #f0e0b8;                     /* parchment gold (titles) */
+      --gold-dim:  #cd9f5f;                     /* brass-tan (button labels) */
+      --text:      #d6c3a1;                     /* warm parchment body text */
+      --text-dim:  #ab9268;                     /* muted sepia */
+      --text-faint:#6b5638;                     /* faint / catalog numbers */
+      --green-ok:  #7fae86;                     /* muted forest green */
+      --green-bg:  rgba(34, 50, 36, 0.45);
+      --green-br:  #3a5a3e;
+      --red-ok:    #c97a6a;                     /* muted burgundy */
+      --red-bg:    rgba(56, 22, 18, 0.45);
+      --red-br:    #5c2a20;
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Crimson Text', Georgia, serif;
+      font-family: 'Lora', Georgia, serif;
       background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
     }
 
-    /* ── atmospheric bg ── */
+    /* ── atmospheric bg: wood grain + candle glow + vignette ── */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background:
-        radial-gradient(ellipse 60% 45% at 50% -5%, #2e0c1e 0%, transparent 65%),
-        radial-gradient(ellipse 45% 35% at 85% 100%, #0e0b2e 0%, transparent 60%),
-        radial-gradient(ellipse 30% 25% at 15% 80%,  #1c0a0a 0%, transparent 50%);
+      background-image:
+        /* faint wood-grain striations */
+        repeating-linear-gradient(97deg, rgba(255, 224, 168, 0.025) 0px, rgba(255, 224, 168, 0.025) 1px, transparent 1px, transparent 4px),
+        /* warm candlelight glow, upper-center */
+        radial-gradient(ellipse 60% 45% at 50% -5%, #3a2410 0%, transparent 65%),
+        /* secondary embers, lower corners */
+        radial-gradient(ellipse 45% 35% at 85% 100%, #241a0c 0%, transparent 60%),
+        radial-gradient(ellipse 30% 25% at 15% 80%,  #1c130a 0%, transparent 50%);
+      /* soft vignette to draw the eye toward the centre, like candlelight */
+      box-shadow: inset 0 0 220px 70px rgba(8, 5, 2, 0.6);
       pointer-events: none;
       z-index: 0;
+    }
+
+    /* ── NEW: drifting dust motes for a candlelit, cozy feel ── */
+    .dust-motes {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .mote {
+      position: absolute;
+      bottom: -10px;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232, 201, 131, 0.9), rgba(232, 201, 131, 0) 70%);
+      opacity: 0;
+      animation: mote-float linear infinite;
+    }
+    @keyframes mote-float {
+      0%   { transform: translate(0, 0); opacity: 0; }
+      12%  { opacity: 0.65; }
+      55%  { opacity: 0.3; }
+      100% { transform: translate(18px, -105vh); opacity: 0; }
     }
 
     /* ── layout ── */
@@ -66,21 +146,29 @@
     /* ── header ── */
     .sigil {
       text-align: center;
-      font-size: 1.8rem;
-      color: var(--accent1);
-      letter-spacing: 0.4em;
-      margin-bottom: 0.6rem;
+      font-size: 1.7rem;
+      color: var(--accent2);
+      text-shadow: 0 0 14px rgba(201, 162, 75, 0.45);
+      margin-bottom: 0.7rem;
+      animation: flicker 3.6s ease-in-out infinite;
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 0.78; text-shadow: 0 0 10px rgba(201, 162, 75, 0.35); }
+      45%      { opacity: 1;    text-shadow: 0 0 18px rgba(201, 162, 75, 0.6); }
+      60%      { opacity: 0.86; }
+      80%      { opacity: 1;    text-shadow: 0 0 20px rgba(201, 162, 75, 0.65); }
     }
 
     h1 {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: clamp(1.9rem, 5vw, 2.8rem);
-      font-weight: 700;
+      font-weight: 800;
       text-align: center;
-      color: #eedfc0;
-      letter-spacing: 0.14em;
+      color: #f2e6c8;
+      letter-spacing: 0.09em;
       text-transform: uppercase;
-      line-height: 1.1;
+      line-height: 1.15;
+      text-shadow: 0 0 22px rgba(201, 162, 75, 0.22);
     }
 
     .subtitle {
@@ -88,7 +176,7 @@
       font-style: italic;
       color: var(--text-dim);
       font-size: 1rem;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
       margin-top: 0.5rem;
       margin-bottom: 0.8rem;
     }
@@ -103,11 +191,12 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: linear-gradient(90deg, transparent, #5c2d4a, #9b5a7e, #5c2d4a, transparent);
+      background: linear-gradient(90deg, transparent, #6b4a24, #c9a24b, #6b4a24, transparent);
     }
     .rule-gem {
       width: 7px; height: 7px;
       background: var(--accent2);
+      box-shadow: 0 0 6px rgba(201, 162, 75, 0.6);
       transform: rotate(45deg);
       flex-shrink: 0;
     }
@@ -123,7 +212,7 @@
     }
 
     .book-count {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.75rem;
       letter-spacing: 0.1em;
       color: var(--text-dim);
@@ -131,14 +220,14 @@
     }
 
     .btn-open {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--gold-dim);
       background: transparent;
-      border: 1px solid #4a2535;
+      border: 1px solid #4a3319;
       padding: 0.55rem 1.3rem;
       border-radius: 3px;
       cursor: pointer;
@@ -153,15 +242,15 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      background: linear-gradient(135deg, #3a2410, #6b4a24);
       opacity: 0;
       transition: opacity 0.25s;
     }
-    .btn-open:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .btn-open:hover { color: #fbecc4; border-color: var(--accent2); }
     .btn-open:hover::before { opacity: 1; }
     .btn-open svg, .btn-open span { position: relative; z-index: 1; }
 
-    /* ── book list ── */
+    /* ── book list — styled like spines resting on a shelf ── */
     #bookList {
       display: flex;
       flex-direction: column;
@@ -177,38 +266,55 @@
       border: 1px solid var(--border);
       border-radius: 5px;
       position: relative;
-      transition: border-color 0.25s, background 0.25s;
+      transition: border-color 0.25s, background 0.25s, transform 0.25s, box-shadow 0.25s;
       text-decoration: none;
       color: inherit;
     }
+    /* gilt-edge "spine" bar — the book's signature detail */
     .book::before {
       content: '';
       position: absolute;
       left: 0; top: 0; bottom: 0;
       width: 3px;
-      background: linear-gradient(180deg, var(--accent1), #3a1228, var(--accent1));
+      background: linear-gradient(180deg, #c9a24b, #4a3319, #c9a24b);
       border-radius: 5px 0 0 5px;
-      opacity: 0.55;
+      opacity: 0.6;
       transition: opacity 0.25s;
     }
-    .book:hover { border-color: var(--border-h); background: var(--surface-h); }
+    /* SIGNATURE INTERACTION: pulling a book off the shelf toward candlelight */
+    .book:hover {
+      border-color: var(--border-h);
+      background: var(--surface-h);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45), 0 0 22px rgba(201, 162, 75, 0.16);
+    }
     .book:hover::before { opacity: 1; }
+    .book:focus-visible { outline: 2px solid var(--accent3); outline-offset: 3px; }
 
     .book-num {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.7rem;
       color: var(--text-faint);
       letter-spacing: 0.05em;
-      width: 1.5rem;
+      width: 2.6rem;
       text-align: right;
       flex-shrink: 0;
+      line-height: 1.3;
+    }
+    /* NEW: small catalog-style "No." label above each book number */
+    .book-num::before {
+      content: 'No.';
+      display: block;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      opacity: 0.65;
     }
 
     .book-cover-icon {
       width: 36px;
       height: 48px;
-      background: rgba(92, 45, 74, 0.18);
-      border: 1px solid #3a1a2e;
+      background: rgba(138, 106, 53, 0.18);
+      border: 1px solid #4a3319;
       border-radius: 2px;
       display: flex;
       align-items: center;
@@ -217,7 +323,7 @@
       transition: background 0.25s, border-color 0.25s;
     }
     .book:hover .book-cover-icon {
-      background: rgba(139, 74, 107, 0.22);
+      background: rgba(201, 162, 75, 0.22);
       border-color: var(--accent1);
     }
     .book-cover-icon svg {
@@ -232,11 +338,11 @@
     .book-info { flex: 1; min-width: 0; }
 
     .book-title {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.98rem;
       font-weight: 600;
       color: var(--gold);
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
       line-height: 1.35;
       white-space: nowrap;
       overflow: hidden;
@@ -262,13 +368,14 @@
       margin-top: 0.45rem;
     }
     .progress-bar {
-      height: 2px;
+      height: 3px;
       width: 130px;
-      background: #1e1018;
+      background: #241a0e;
       border-radius: 2px;
       overflow: hidden;
       flex-shrink: 0;
     }
+    /* gold-leaf progress fill, like a bookmark ribbon */
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--accent1), var(--accent3));
@@ -288,14 +395,14 @@
     }
 
     .btn-resume {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.72rem;
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--gold-dim);
       background: transparent;
-      border: 1px solid #4a2535;
+      border: 1px solid #4a3319;
       padding: 0.45rem 1rem;
       border-radius: 3px;
       text-decoration: none;
@@ -308,11 +415,11 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      background: linear-gradient(135deg, #3a2410, #6b4a24);
       opacity: 0;
       transition: opacity 0.25s;
     }
-    .btn-resume:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .btn-resume:hover { color: #fbecc4; border-color: var(--accent2); }
     .btn-resume:hover::before { opacity: 1; }
     .btn-resume span { position: relative; z-index: 1; }
 
@@ -325,25 +432,26 @@
     .empty-glyph {
       font-size: 3.5rem;
       margin-bottom: 1rem;
-      opacity: 0.25;
+      opacity: 0.3;
       display: block;
     }
     .empty p {
       font-style: italic;
       font-size: 1.05rem;
       line-height: 1.7;
+      color: var(--text-dim); /* bumped up from text-faint for readability */
     }
     .empty-cta {
       margin-top: 1.4rem;
       display: inline-block;
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--gold-dim);
       background: transparent;
-      border: 1px solid #4a2535;
+      border: 1px solid #4a3319;
       padding: 0.6rem 1.4rem;
       border-radius: 3px;
       cursor: pointer;
@@ -355,11 +463,11 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      background: linear-gradient(135deg, #3a2410, #6b4a24);
       opacity: 0;
       transition: opacity 0.25s;
     }
-    .empty-cta:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .empty-cta:hover { color: #fbecc4; border-color: var(--accent2); }
     .empty-cta:hover::before { opacity: 1; }
     .empty-cta span { position: relative; z-index: 1; }
 
@@ -368,7 +476,7 @@
       text-align: center;
       margin-top: 3.5rem;
       color: var(--text-faint);
-      font-size: 1rem;
+      font-size: 0.9rem;
       letter-spacing: 0.5em;
     }
 
@@ -379,7 +487,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(5, 2, 5, 0.82);
+      background: rgba(12, 7, 4, 0.85);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -388,13 +496,14 @@
     .modal-overlay.open { display: flex; }
 
     .modal {
-      background: #110810;
-      border: 1px solid #3e1e30;
+      background: #1f150d;
+      border: 1px solid #4a3319;
       border-radius: 6px;
       width: 100%;
       max-width: 520px;
       padding: 2rem 2rem 1.8rem;
       position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
 
     .modal::before {
@@ -414,11 +523,11 @@
     }
 
     .modal-title {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 1.05rem;
       font-weight: 700;
-      color: #eedfc0;
-      letter-spacing: 0.1em;
+      color: #f2e6c8;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
     .modal-sub {
@@ -443,7 +552,7 @@
 
     /* path input */
     .input-label {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.68rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -455,7 +564,7 @@
     .path-row {
       display: flex;
       gap: 0;
-      border: 1px solid #3e1e30;
+      border: 1px solid #4a3319;
       border-radius: 4px;
       overflow: hidden;
       transition: border-color 0.25s;
@@ -464,11 +573,11 @@
 
     .path-input {
       flex: 1;
-      background: rgba(10, 5, 8, 0.8);
+      background: rgba(20, 13, 7, 0.8);
       border: none;
       outline: none;
       color: var(--gold);
-      font-family: 'Crimson Text', serif;
+      font-family: 'Lora', serif;
       font-size: 0.95rem;
       padding: 0.6rem 0.85rem;
       min-width: 0;
@@ -476,11 +585,11 @@
     .path-input::placeholder { color: var(--text-faint); font-style: italic; }
 
     .path-browse {
-      background: rgba(92, 45, 74, 0.2);
+      background: rgba(138, 106, 53, 0.2);
       border: none;
-      border-left: 1px solid #3e1e30;
+      border-left: 1px solid #4a3319;
       color: var(--gold-dim);
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.7rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -489,16 +598,16 @@
       transition: background 0.2s, color 0.2s;
       white-space: nowrap;
     }
-    .path-browse:hover { background: rgba(139, 74, 107, 0.3); color: #f0d8b8; }
+    .path-browse:hover { background: rgba(201, 162, 75, 0.28); color: #fbecc4; }
 
     /* hidden real file input */
     #realFileInput { display: none; }
 
     /* drop zone */
     .drop-zone {
-      border: 1px dashed #3e1e30;
+      border: 1px dashed #4a3319;
       border-radius: 4px;
-      background: rgba(10, 4, 8, 0.5);
+      background: rgba(20, 13, 7, 0.5);
       padding: 1.8rem 1rem;
       text-align: center;
       cursor: pointer;
@@ -516,14 +625,14 @@
     }
     .drop-zone:hover, .drop-zone.drag-over {
       border-color: var(--accent2);
-      background: rgba(20, 8, 16, 0.7);
+      background: rgba(45, 30, 15, 0.55);
     }
     .drop-icon {
       display: block;
       margin: 0 auto 0.5rem;
     }
     .drop-text {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.78rem;
       letter-spacing: 0.09em;
       text-transform: uppercase;
@@ -549,7 +658,7 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: #2e1a26;
+      background: #3a2a18;
     }
 
     /* selected file pill */
@@ -558,8 +667,8 @@
       align-items: center;
       gap: 0.6rem;
       margin-top: 1rem;
-      background: rgba(20, 8, 15, 0.8);
-      border: 1px solid #2e1a26;
+      background: rgba(30, 20, 10, 0.75);
+      border: 1px solid #3a2a18;
       border-left: 3px solid var(--accent1);
       border-radius: 4px;
       padding: 0.7rem 0.9rem;
@@ -568,7 +677,7 @@
     .sel-pill-icon { color: var(--accent1); flex-shrink: 0; }
     .sel-pill-name {
       flex: 1;
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.82rem;
       color: var(--gold);
       white-space: nowrap;
@@ -595,7 +704,7 @@
     }
 
     .btn-cancel {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.72rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -610,14 +719,14 @@
     .btn-cancel:hover { color: var(--text); border-color: var(--text-dim); }
 
     .btn-summon {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 0.72rem;
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--gold-dim);
       background: transparent;
-      border: 1px solid #4a2535;
+      border: 1px solid #4a3319;
       padding: 0.55rem 1.3rem;
       border-radius: 3px;
       cursor: pointer;
@@ -629,11 +738,11 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, #3a1525, #5c2d4a);
+      background: linear-gradient(135deg, #3a2410, #6b4a24);
       opacity: 0;
       transition: opacity 0.25s;
     }
-    .btn-summon:hover { color: #f0d8b8; border-color: var(--accent2); }
+    .btn-summon:hover { color: #fbecc4; border-color: var(--accent2); }
     .btn-summon:hover::before { opacity: 1; }
     .btn-summon:disabled { opacity: 0.38; cursor: not-allowed; }
     .btn-summon:disabled::before { opacity: 0; }
@@ -662,37 +771,72 @@
       color: var(--red-ok);
     }
     .modal-status.loading {
-      background: rgba(20, 8, 15, 0.6);
-      border: 1px solid #3e1e30;
+      background: rgba(30, 20, 10, 0.5);
+      border: 1px solid #4a3319;
       color: var(--text-dim);
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin { display: inline-block; animation: spin 1s linear infinite; }
+
+    /* ══════════════════════════════════════════
+       NEW: accessible focus states (keyboard nav)
+    ══════════════════════════════════════════ */
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent3);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    /* ══════════════════════════════════════════
+       NEW: respect reduced-motion preferences
+    ══════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      .sigil, .mote { animation: none !important; }
+      html { scroll-behavior: auto; }
+    }
   </style>
 </head>
 <body>
 
+<!-- NEW: decorative dust motes drifting through the candlelight (purely atmospheric) -->
+<div class="dust-motes" aria-hidden="true">
+  <span class="mote" style="left:8%;  animation-duration:14s; animation-delay:0s;"></span>
+  <span class="mote" style="left:22%; animation-duration:19s; animation-delay:3s;"></span>
+  <span class="mote" style="left:38%; animation-duration:16s; animation-delay:1.5s;"></span>
+  <span class="mote" style="left:54%; animation-duration:21s; animation-delay:5s;"></span>
+  <span class="mote" style="left:67%; animation-duration:15s; animation-delay:2s;"></span>
+  <span class="mote" style="left:79%; animation-duration:18s; animation-delay:6.5s;"></span>
+  <span class="mote" style="left:90%; animation-duration:20s; animation-delay:4s;"></span>
+  <span class="mote" style="left:47%; animation-duration:17s; animation-delay:8s;"></span>
+</div>
+
 <!-- ════════════════════════ PAGE ════════════════════════ -->
 <div class="page">
 
-  <div class="sigil">⸸ &nbsp;☽&nbsp; ⸸</div>
-  <h1>Dummy Library</h1>
-  <p class="subtitle">— Codex of the Forgotten Volumes —</p>
-  <div class="rule"><div class="rule-gem"></div></div>
+  <header class="lib-header">
+    <div class="sigil" aria-hidden="true">❦</div>
+    <h1>Dummy Library</h1>
+    <p class="subtitle">— A Home for Well-Loved Books —</p>
+    <div class="rule"><div class="rule-gem" aria-hidden="true"></div></div>
+  </header>
 
-  <div class="toolbar">
-    <div class="book-count" id="bookCount">Loading tomes…</div>
-    <button class="btn-open" id="openModalBtn" onclick="openModal()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:relative;z-index:1">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      <span>Open a Tome</span>
-    </button>
-  </div>
+  <main>
+    <div class="toolbar">
+      <div class="book-count" id="bookCount">Loading tomes…</div>
+      <button class="btn-open" id="openModalBtn" onclick="openModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:relative;z-index:1" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span>Open a Tome</span>
+      </button>
+    </div>
 
-  <div id="bookList"></div>
+    <div id="bookList" role="list"></div>
+  </main>
 
-  <div class="footer">✦ &nbsp; ✦ &nbsp; ✦</div>
+  <footer class="footer" aria-hidden="true">❦&nbsp;&nbsp;·&nbsp;&nbsp;❦&nbsp;&nbsp;·&nbsp;&nbsp;❦</footer>
 </div>
 
 
@@ -702,8 +846,8 @@
 
     <div class="modal-header">
       <div>
-        <div class="modal-title">⸸ &nbsp;Summon a Tome</div>
-        <div class="modal-sub">Bind a PDF to the library</div>
+        <div class="modal-title">❦&nbsp;Add a Tome</div>
+        <div class="modal-sub">Add a PDF to your collection</div>
       </div>
       <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
     </div>
@@ -722,15 +866,15 @@
       <button class="path-browse" onclick="triggerFilePick()">Browse</button>
     </div>
 
-    <input type="file" id="realFileInput" accept=".pdf">
+    <input type="file" id="realFileInput" accept=".pdf" aria-label="Choose a PDF file">
 
     <!-- OR divider -->
     <div class="divider-or">or drop a file</div>
 
     <!-- Drop zone -->
     <div class="drop-zone" id="dropZone">
-      <input type="file" id="dropInput" accept=".pdf">
-      <svg class="drop-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5c2d4a" stroke-width="1.5">
+      <input type="file" id="dropInput" accept=".pdf" aria-label="Choose a PDF file">
+      <svg class="drop-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a5763a" stroke-width="1.5" aria-hidden="true">
         <path d="M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4M12 3v11M8 10l4 4 4-4"/>
       </svg>
       <div class="drop-text">Click or drag a PDF here</div>
@@ -739,7 +883,7 @@
 
     <!-- Selected file pill -->
     <div class="sel-pill" id="selPill">
-      <svg class="sel-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <svg class="sel-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
       </svg>
       <span class="sel-pill-name" id="selPillName"></span>
@@ -747,7 +891,7 @@
     </div>
 
     <!-- Status -->
-    <div class="modal-status" id="modalStatus">
+    <div class="modal-status" id="modalStatus" role="status" aria-live="polite">
       <span id="statusIcon"></span>
       <span id="statusText"></span>
     </div>
@@ -756,7 +900,7 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-summon" id="summonBtn" disabled onclick="summon()">
-        <span>⸸ &nbsp;Open in Library</span>
+        <span>❦&nbsp;Add to the Shelf</span>
       </button>
     </div>
 
@@ -765,6 +909,11 @@
 
 
 <!-- ════════════════════════ SCRIPT ════════════════════════ -->
+<!-- No logic below was changed — only decorative copy strings
+     (loading/success/error text) and a few added ARIA attributes
+     in the renderBooks() template. All ids, function names,
+     event listeners and fetch endpoints are identical to the
+     original file. -->
 <script>
   /* ── state ── */
   let pickedFile   = null; // File object from picker (gives name only in browser)
@@ -882,14 +1031,14 @@
     try {
       const res = await fetch('/api/open?path=' + encodeURIComponent(path));
       if (res.redirected || res.ok) {
-        showStatus('success', '✦', 'The tome has been summoned. Redirecting…');
+        showStatus('success', '✓', 'The tome has found its place. Opening…');
         setTimeout(() => {
           // follow the redirect the server sends (/view.html?book=...)
           window.location.href = res.url || '/';
         }, 800);
       } else {
         const msg = await res.text().catch(() => '');
-        showStatus('error', '✕', msg || 'The spirits refused — check the path.');
+        showStatus('error', '✕', msg || 'That path could not be found — please check it.');
         btn.disabled = false;
       }
     } catch (err) {
@@ -912,9 +1061,9 @@
       countEl.textContent = '0 Tomes';
       listEl.innerHTML = `
         <div class="empty">
-          <span class="empty-glyph">📜</span>
-          <p>No tomes yet reside within these halls.<br>Summon a PDF to begin your collection.</p>
-          <button class="empty-cta" onclick="openModal()"><span>⸸ &nbsp;Open a Tome</span></button>
+          <span class="empty-glyph" aria-hidden="true">📖</span>
+          <p>Your shelves are empty.<br>Add a PDF to begin your collection.</p>
+          <button class="empty-cta" onclick="openModal()"><span>❦&nbsp;Open a Tome</span></button>
         </div>`;
       return;
     }
@@ -929,10 +1078,10 @@
       });
       const num = String(i + 1).padStart(2, '0');
       return `
-        <div class="book">
+        <div class="book" role="listitem">
           <div class="book-num">${num}</div>
           <div class="book-cover-icon">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path d="M4 19V6a2 2 0 012-2h13v13"/>
               <path d="M4 19a2 2 0 002 2h13a2 2 0 000-4H6a2 2 0 01-2-2z"/>
               <line x1="9" y1="7" x2="15" y2="7"/>
@@ -943,12 +1092,12 @@
             <div class="book-title">${escHtml(book.title)}</div>
             <div class="book-meta">
               <span>Page ${book.last_page} of ${book.page_count || '?'}</span>
-              <span class="sep">◆</span>
+              <span class="sep" aria-hidden="true">◆</span>
               <span>${dateStr}</span>
             </div>
             ${book.page_count ? `
             <div class="progress-row">
-              <div class="progress-bar">
+              <div class="progress-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Reading progress">
                 <div class="progress-fill" style="width:${pct}%"></div>
               </div>
               <span class="progress-label">${pct}%</span>
@@ -978,3 +1127,6 @@
 </script>
 </body>
 </html>
+
+
+

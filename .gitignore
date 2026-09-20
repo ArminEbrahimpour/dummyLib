@@ -2,3 +2,5 @@
 *.db
 *.db-wal
 *.db-shm
+dummylib-linux-amd64
+dummylib
