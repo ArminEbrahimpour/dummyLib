@@ -109,7 +109,7 @@ func (s *Store) AllBooks() ([]model.Book, error) {
 // Add a helper at the top of store.go
 func parseTime(s string) (time.Time, error) {
 	formats := []string{
-		"2006-01-02 15:04:05 +0000 UTC", // ← add this as first (most common now)
+		"2006-01-02 15:04:05 +0000 UTC",
 		time.RFC3339Nano,
 		time.RFC3339,
 		"2006-01-02 15:04:05.999999999-07:00",

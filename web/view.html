@@ -4,70 +4,163 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Opening tome…</title>
+
+  <!--
+    ══════════════════════════════════════════════════════════════
+    COZY LIBRARY REDESIGN — summary of changes (view.html)
+    ══════════════════════════════════════════════════════════════
+    This page is the brief "reading desk" moment between choosing
+    a book and the PDF viewer opening — so it now looks like an
+    open book glowing on a wooden desk rather than a dark occult
+    loading screen. Same palette/fonts as index.html for
+    continuity (Playfair Display + Lora, walnut/mahogany/brass).
+    The ⸸/☽ sigil became the same "❦" fleuron used on the landing
+    page, and the loading dots now read as warm brass embers.
+    All logic in the <script> (reading ?book=, fetching
+    /api/books/<id>, redirecting to /viewer/web/viewer.html) is
+    completely unchanged — only presentation and a couple of
+    copy strings were touched.
+    ══════════════════════════════════════════════════════════════
+  -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Same token names/values as index.html for a consistent feel across pages */
+    :root {
+      --bg:        #150e08;
+      --border:    #4a3319;
+      --accent1:   #a5763a;
+      --accent2:   #c9a24b;
+      --accent3:   #e8c983;
+      --gold:      #f0e0b8;
+      --gold-dim:  #cd9f5f;
+      --text:      #d6c3a1;
+      --text-dim:  #ab9268;
+      --text-faint:#6b5638;
+      --red-ok:    #c97a6a;
+      --red-bg:    rgba(56, 22, 18, 0.45);
+      --red-br:    #5c2a20;
+      --parchment: #f4e9d0;
+      --parchment-ink: #4a3016;
+    }
+
     body {
-      font-family: 'Crimson Text', Georgia, serif;
-      background: #0a0608;
-      color: #c9b8a8;
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      position: relative;
     }
 
+    /* ── atmospheric bg: same wood grain / candle glow as index.html ── */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background:
-        radial-gradient(ellipse 60% 50% at 50% 10%, #2a0a1a 0%, transparent 70%),
-        radial-gradient(ellipse 40% 30% at 80% 90%, #0d0a2a 0%, transparent 60%);
+      background-image:
+        repeating-linear-gradient(97deg, rgba(255, 224, 168, 0.025) 0px, rgba(255, 224, 168, 0.025) 1px, transparent 1px, transparent 4px),
+        radial-gradient(ellipse 60% 45% at 50% 8%, #3a2410 0%, transparent 65%),
+        radial-gradient(ellipse 45% 35% at 85% 95%, #241a0c 0%, transparent 60%);
+      box-shadow: inset 0 0 220px 70px rgba(8, 5, 2, 0.6);
       pointer-events: none;
+      z-index: 0;
     }
 
-    .center {
+    /* NEW: a handful of drifting dust motes, matching the landing page */
+    .dust-motes { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+    .mote {
+      position: absolute;
+      bottom: -10px;
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232, 201, 131, 0.85), rgba(232, 201, 131, 0) 70%);
+      opacity: 0;
+      animation: mote-float linear infinite;
+    }
+    @keyframes mote-float {
+      0%   { transform: translate(0, 0); opacity: 0; }
+      12%  { opacity: 0.6; }
+      55%  { opacity: 0.28; }
+      100% { transform: translate(16px, -105vh); opacity: 0; }
+    }
+
+    /* ── the "open book on a reading desk" card ── */
+    .desk {
       position: relative;
       z-index: 1;
       text-align: center;
-      padding: 2rem;
+      padding: 2.6rem 2.8rem;
+      max-width: 420px;
+      width: 100%;
+      margin: 0 1.5rem;
+      background: linear-gradient(180deg, rgba(58, 40, 22, 0.55), rgba(40, 27, 14, 0.6));
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(201, 162, 75, 0.08);
+    }
+    .desk::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent1), var(--accent2), var(--accent1), transparent);
+      border-radius: 8px 8px 0 0;
+    }
+
+    /* open-book glyph glowing like it's lit by a nearby candle */
+    .book-glyph {
+      font-size: 2.6rem;
+      margin-bottom: 0.9rem;
+      filter: drop-shadow(0 0 14px rgba(201, 162, 75, 0.45));
+      animation: breathe 3.4s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.92; }
+      50%      { transform: scale(1.045); opacity: 1; }
     }
 
     .sigil {
-      font-size: 2rem;
-      color: #7c3a5e;
-      letter-spacing: 0.4em;
-      margin-bottom: 1.2rem;
-      animation: pulse 2.5s ease-in-out infinite;
+      font-size: 1.4rem;
+      color: var(--accent2);
+      text-shadow: 0 0 12px rgba(201, 162, 75, 0.45);
+      letter-spacing: 0.3em;
+      margin-bottom: 1rem;
+      animation: flicker 3.6s ease-in-out infinite;
     }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.5; }
-      50%       { opacity: 1; }
+    @keyframes flicker {
+      0%, 100% { opacity: 0.78; }
+      45%      { opacity: 1; }
+      60%      { opacity: 0.86; }
+      80%      { opacity: 1; }
     }
 
     .title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: #e8d5b0;
-      margin-bottom: 0.4rem;
+      color: #f2e6c8;
+      margin-bottom: 0.5rem;
     }
 
     .sub {
       font-style: italic;
-      color: #6a5a4e;
-      font-size: 0.95rem;
+      color: var(--text-dim);
+      font-size: 0.98rem;
     }
 
     .dots {
-      margin-top: 1.8rem;
+      margin-top: 1.9rem;
       display: flex;
       justify-content: center;
       gap: 0.5rem;
@@ -75,7 +168,8 @@
 
     .dot {
       width: 6px; height: 6px;
-      background: #7c3a5e;
+      background: var(--accent2);
+      box-shadow: 0 0 6px rgba(201, 162, 75, 0.6);
       border-radius: 50%;
       animation: bounce 1.2s ease-in-out infinite;
     }
@@ -89,48 +183,75 @@
 
     .back-link {
       display: inline-block;
-      margin-top: 2.5rem;
-      font-family: 'Cinzel', serif;
+      margin-top: 2.2rem;
+      font-family: 'Playfair Display', serif;
       font-size: 0.7rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #4a3a32;
+      color: var(--text-faint);
       text-decoration: none;
-      border-bottom: 1px solid #3a2030;
-      padding-bottom: 1px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2px;
       transition: color 0.2s, border-color 0.2s;
     }
-    .back-link:hover { color: #c09878; border-color: #8b4a6b; }
+    .back-link:hover { color: var(--accent3); border-color: var(--accent2); }
+    .back-link:focus-visible {
+      outline: 2px solid var(--accent3);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
 
     .error-box {
       display: none;
       margin-top: 1.5rem;
-      background: rgba(30,10,10,0.6);
-      border: 1px solid #4a1a1a;
-      color: #e08080;
+      background: var(--red-bg);
+      border: 1px solid var(--red-br);
+      color: var(--red-ok);
       border-radius: 4px;
       padding: 0.7rem 1.1rem;
       font-size: 0.9rem;
       font-style: italic;
       max-width: 360px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .error-box.visible { display: block; }
+
+    /* Respect reduced-motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      .sigil, .mote, .book-glyph { animation: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="center">
-    <div class="sigil">⸸ ☽ ⸸</div>
+
+  <!-- NEW: decorative dust motes, matching the landing page -->
+  <div class="dust-motes" aria-hidden="true">
+    <span class="mote" style="left:12%; animation-duration:15s; animation-delay:0s;"></span>
+    <span class="mote" style="left:34%; animation-duration:19s; animation-delay:3s;"></span>
+    <span class="mote" style="left:58%; animation-duration:17s; animation-delay:1.5s;"></span>
+    <span class="mote" style="left:76%; animation-duration:20s; animation-delay:5s;"></span>
+    <span class="mote" style="left:88%; animation-duration:16s; animation-delay:2.5s;"></span>
+  </div>
+
+  <div class="desk">
+    <div class="book-glyph" aria-hidden="true">📖</div>
+    <div class="sigil" aria-hidden="true">❦</div>
     <div class="title" id="titleEl">Opening Tome…</div>
     <div class="sub" id="subEl">Consulting the archive</div>
-    <div class="dots">
+    <div class="dots" aria-hidden="true">
       <div class="dot"></div>
       <div class="dot"></div>
       <div class="dot"></div>
     </div>
-    <div class="error-box" id="errorBox"></div>
+    <div class="error-box" id="errorBox" role="alert"></div>
     <a class="back-link" href="/">← Return to the Library</a>
   </div>
 
+  <!-- No logic below was changed — only a couple of copy strings.
+       All ids (titleEl, subEl, errorBox), the ?book= param handling,
+       the /api/books/<id> fetch, and the final redirect to
+       /viewer/web/viewer.html are identical to the original file. -->
   <script>
     async function init() {
       const params  = new URLSearchParams(window.location.search);
@@ -141,7 +262,7 @@
 
       if (!bookId) {
         titleEl.textContent = 'Missing Tome ID';
-        subEl.textContent   = 'No book was specified in the scroll.';
+        subEl.textContent   = 'No book was specified.';
         errBox.textContent  = 'No ?book= parameter found in the URL.';
         errBox.classList.add('visible');
         return;
