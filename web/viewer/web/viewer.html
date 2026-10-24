@@ -487,20 +487,57 @@ See https://github.com/adobe-type-tools/cmap-resources
   const params = new URLSearchParams(window.location.search);
   const bookId = params.get("bookId");
   if (!bookId) return;
-  // Save current page on tab close / refresh
-  window.addEventListener("beforeunload", function() {
-    const numPagesEl = document.getElementById("numPages");
-    if (!numPagesEl) return;
-    // Text looks like "(324 of 510)" - extract the first number
-    const match = numPagesEl.textContent.match(/\(?(\d+)\s+of\s+(\d+)\)?/);
-    if (!match) return;
-    const page = parseInt(match[1], 10);
-    if (!isNaN(page)) {
-      // Use sendBeacon for reliability during page unload
-      navigator.sendBeacon("/api/books/" + bookId, JSON.stringify({page: page}));
+
+  const url = "/api/books/" + bookId;
+  let currentPage = 0;
+  let controller = null;
+
+  function payload(page) {
+    return JSON.stringify({ page: page });
+  }
+
+  function save(page) {
+    if (!page || page < 1 || page === currentPage) return;
+    currentPage = page;
+    if (controller) controller.abort();
+    controller = new AbortController();
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload(page),
+      signal: controller.signal,
+      keepalive: true
+    }).catch(function(err) {
+      if (err && err.name === "AbortError") return;
+      currentPage = 0;
+    });
+  }
+
+  function currentViewerPage() {
+    const app = window.PDFViewerApplication;
+    const page = app && app.pdfViewer && app.pdfViewer.currentPageNumber;
+    return page || currentPage || 0;
+  }
+
+  function attach() {
+    const app = window.PDFViewerApplication;
+    if (!app || !app.eventBus) {
+      setTimeout(attach, 50);
+      return;
     }
+    app.eventBus.on("pagechanging", function(evt) {
+      save(evt.pageNumber);
+    });
+  }
+
+  window.addEventListener("beforeunload", function() {
+    const page = currentViewerPage();
+    if (!page) return;
+    if (controller) controller.abort();
+    navigator.sendBeacon(url, new Blob([payload(page)], { type: "application/json" }));
   });
-  // Also save periodically? (optional) – could save every 10 seconds as fallback.
+
+  attach();
 })();
 </script>
   </body>
